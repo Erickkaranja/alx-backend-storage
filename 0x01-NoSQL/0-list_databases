@@ -1,0 +1,13 @@
+// Connect to the MongoDB server (modify the connection string as needed)
+const conn = new Mongo();
+
+// Get a reference to the admin database (you can change this to any other database)
+const adminDb = conn.getDB("admin");
+
+// List all databases
+const dbList = adminDb.runCommand({ listDatabases: 1 });
+
+// Loop through and print each database
+dbList.databases.forEach(db => {
+    print(`${db.name}  ${(db.sizeOnDisk / (1024 * 1024 * 1024)).toFixed(3)}GB`);
+});

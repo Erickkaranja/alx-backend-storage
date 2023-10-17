@@ -1,0 +1,8 @@
+const conn = new Mongo();
+
+// Get a reference to the "my_db" database (it will be created if it doesn't exist)
+const myDb = conn.getDB("my_db");
+
+
+// Confirm that the database "my_db" is now created and used
+print(`switched to db ${myDb.getName()}`);
