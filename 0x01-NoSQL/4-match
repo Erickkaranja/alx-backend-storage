@@ -1,2 +1,2 @@
-/find all documents in collection schoool  where name is Holberton school
-db.school.find({ name: "Holberton school" })
+//find all documents in collection schoool  where name is Holberton school
+db.school.find({'name': 'Holberton school'})
