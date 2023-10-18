@@ -11,7 +11,4 @@ def update_topics(mongo_collection, name, topics):
            updates the queried object.
     '''
 
-    school_query = {"name": name}
-    school = mongo_collection.find_one(school_query)
-    if school:
-        mongo_collection.update_one(school_query, {"$set": {"topics": topics}})
+    mongo_collection.update_many({'name': name}, {"$set": {"topics": topics}})

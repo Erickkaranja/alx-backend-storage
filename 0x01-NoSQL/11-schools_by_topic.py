@@ -11,9 +11,5 @@ def schools_by_topic(mongo_collection, topic):
            a school with a given topic.
     '''
 
-    query = {"topics": topic}
-    schools_with_topic = mongo_collection.find(query)
-
-    school_names = [school["name"] for school in schools_with_topic]
-
-    return school_names
+    fetch = mongo_collection.find({'topics': {'$in': [topic]}})
+    return [item for item in fetch]
