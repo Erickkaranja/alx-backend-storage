@@ -2,44 +2,30 @@
 '''this module handle basic redis authentication.'''
 import redis
 import functools
-from typing import Union, Callable
+from typing import Union, Callable, Any
 import uuid
-import pickle
 
-r = redis.Redis(host='localhost', port=6379, db=0)
 
 def call_history(method: Callable) -> Callable:
     @functools.wraps(method)
-    def wrapper(*args, **kwargs):
-        # Get the qualified name of the decorated function
-        function_name = f"{method.__qualname__}"
-        print(function_name)
+    def decorator(self, *args, **kwargs):
+        """store input and output history of a method in redis"""
+        input_name: str = method.__qualname__ + ":inputs"
+        output_name: str = method.__qualname__ + ":outputs"
+        self._redis.rpush(input_name, str(args))
+        output: Any = method(self, *args, **kwargs)
+        self._redis.rpush(output_name, output)
+        return output
+    return decorator
 
-        # Create keys for input and output lists
-        input_key = f"{function_name}:inputs"
-        output_key = f"{function_name}:outputs"
-
-        # Append input arguments to the input list
-        input_data = str(args)
-        r.rpush(input_key, input_data)
-
-        # Execute the original function and store its output
-        result = method(*args, **kwargs)
-        output_data = pickle.dumps(result)  # Serialize the output to store in Redis
-        r.rpush(output_key, output_data)
-
-        return result
-
-    return wrapper
 
 def count_calls(method: Callable):
     '''function that counts the numder of times a given function is called.'''
     @functools.wraps(method)
     def wrapper(self, *args, **kwargs):
-        key = method.__qualname__  # get qualified name of the method.
-        # Increment the count for this method
-        count = self._redis.incr(key)
-        # Call the original method
+        key: str = method.__qualname__
+        self._redis.incr(key)
+
         result = method(self, *args, **kwargs)
         return result
 
@@ -53,7 +39,6 @@ class Cache:
         '''initializing class cache constructor.'''
         self._redis = redis.Redis()
         self._redis.flushdb()
-
 
     @call_history
     @count_calls
@@ -100,3 +85,19 @@ class Cache:
                type int of the converted value.
        '''
         return self.get(key, fn=lambda data: int(data))
+
+
+def replay(method: Callable) -> None:
+    """Make a replay of history of method calls"""
+    _redis = redis.Redis()
+    count: int = int(_redis.get(method.__qualname__))
+    inputkey: str = method.__qualname__ + ":inputs"
+    outkey: str = method.__qualname__ + ":outputs"
+    print("{} was called {} times:".format(method.__qualname__, count))
+    ins: List = list(_redis.lrange(inputkey, 0, -1))
+    outs: List = list(_redis.lrange(outkey, 0, -1))
+    history: List = list(zip(ins, outs))
+    for pair in history:
+        print("{}(*{}) -> {}".format(method.__qualname__,
+                                     pair[0].decode('utf-8'),
+                                     pair[1].decode('utf-8')))
