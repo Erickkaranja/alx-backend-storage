@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+"""module that counts the number of methods called in a bson file."""
 from pymongo import MongoClient
 
 if __name__ == "__main__":
