@@ -2,6 +2,7 @@
 """Make a query to a url and return the html"""
 import requests
 import redis
+from datetime import timedelta
 from functools import wraps
 from typing import Callable
 
@@ -27,6 +28,13 @@ def get_page(url: str) -> str:
     if _redis.get(url):
         page: str = _redis.get(url).decode('utf-8')
     else:
-        page: str = requests.get(url).text
-        _redis.setex(url, 10, page)
+        page = requests.get(url).text
+        _redis.setex(url, timedelta(seconds=1), page)
     return page
+
+
+x = get_page("http://slowwly.robertomurray.co.uk")
+print(x)
+
+y = get_page("https://intranet.alxswe.com/projects/1234")
+print(y)
