@@ -19,7 +19,7 @@ def call_history(method: Callable) -> Callable:
     return decorator
 
 
-def count_calls(method: Callable):
+def count_calls(method: Callable) -> Callable:
     '''function that counts the numder of times a given function is called.'''
     @functools.wraps(method)
     def wrapper(self, *args, **kwargs):
